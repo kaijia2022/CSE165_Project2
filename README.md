@@ -1,2 +1,2 @@
 # CSE165_Project2
-Travel-Wayfinding(Macchu_Picchu Drone Race)
+Travel-Wayfinding(Machu_Picchu Drone Race)
