@@ -12,7 +12,11 @@ public class PoseEvents : MonoBehaviour
     //accumulate force
     private bool isRock = false;
     private bool isStop = false;
+    private bool isSwitch = false;
+    private bool open = false; 
+    public GameObject camera; 
     private float accumulatedForce = 0f;
+    private float zPos; 
     // Start is called before the first frame update
     void Start()
     {
@@ -36,6 +40,7 @@ public class PoseEvents : MonoBehaviour
             }
             
         }
+
     }
 
 
@@ -72,5 +77,29 @@ public class PoseEvents : MonoBehaviour
         rb.angularVelocity = Vector3.zero;
     }
 
-  
+    public void onSwitchSelected()
+    {
+        if (open)
+        {
+            if (isSwitch == false)
+            {
+                isSwitch = true;
+                zPos = camera.transform.position.z;
+                camera.transform.position = new Vector3(camera.transform.position.x, camera.transform.position.y, zPos - 2);
+            } else
+            {
+                isSwitch = false;
+                zPos = camera.transform.position.z;
+                camera.transform.position = new Vector3(camera.transform.position.x, camera.transform.position.y, zPos + 2);
+            }
+        }
+        open = false;
+    }
+
+    public void onSwitchUnSelected()
+    {
+        open = true;
+    }
+
+
 }

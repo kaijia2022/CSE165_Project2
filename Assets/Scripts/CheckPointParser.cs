@@ -13,13 +13,28 @@ public class CheckPointParser : MonoBehaviour
     public TextAsset file;
     public TextMeshProUGUI distanceOffset;
     public TextMeshProUGUI angleOffset;
+    public TextMeshProUGUI finsih;
+    public TextMeshProUGUI timer;
     private List<GameObject> CheckPoints;
     private int currIndex = 0;
     public Color lineColor = Color.red;
     public Color overlapColor = Color.green;
     private LineRenderer lineRenderer;
+    public float countDown;
+    private float timeCount = 0;
+    private bool done = false;
+    private Vector3 lastPosition;
+    public TextMeshProUGUI Crush;
+    public TextMeshProUGUI Reach;
+    private float crushCD;
+    public GameObject Landscape1;
+    public GameObject Landscape2;
+
+
     void Start()
     {
+        crushCD = 3; 
+        done = false;
         List<Vector3> coordinates = ParseFile();
         CheckPoints = new List<GameObject>();
         for (int i = 0; i < coordinates.Count; i++)
@@ -29,7 +44,8 @@ public class CheckPointParser : MonoBehaviour
             newCheckPoint.name = "CheckPoint_" + i;
             CheckPoints.Add(newCheckPoint);
         }
-        drone.transform.position = new Vector3(CheckPoints[currIndex].transform.position.x-60, CheckPoints[currIndex].transform.position.y, CheckPoints[currIndex].transform.position.z);
+        lastPosition = new Vector3(CheckPoints[currIndex].transform.position.x, CheckPoints[currIndex].transform.position.y, CheckPoints[currIndex].transform.position.z);
+        drone.transform.position = new Vector3(CheckPoints[currIndex].transform.position.x, CheckPoints[currIndex].transform.position.y, CheckPoints[currIndex].transform.position.z);
         lineRenderer = GetComponent<LineRenderer>();
         SetLineRenderer(lineColor, 0.1f);
         DisplayBeginMessage(); 
@@ -38,6 +54,31 @@ public class CheckPointParser : MonoBehaviour
 
     void Update()
     {
+
+
+        if (countDown > 0)
+        {
+            countDown -= Time.deltaTime;
+            timer.text = countDown.ToString("F1");
+            finsih.text = "Wait!";
+            drone.GetComponent<Rigidbody>().isKinematic = true;
+        } else
+        {
+            if(done == false){
+                timeCount += Time.deltaTime;
+                timer.text = timeCount.ToString("F1");
+                finsih.text = "";
+                drone.GetComponent<Rigidbody>().isKinematic = false;
+            }
+            else
+            {
+                finsih.text = "Finish!";
+            }
+
+        }
+
+
+
         if (drone != null && CheckPoints != null)
         {
             // Get the center position of the OVR camera (assuming the camera is a child of the drone)
@@ -58,14 +99,21 @@ public class CheckPointParser : MonoBehaviour
         {
             DisplayNextCheckPoint();
         }
+        if (!Landscape1.activeInHierarchy)
+        {
+            GetCrush();
+        }
+
+        Reach.text = currIndex.ToString("F1") + "/" + CheckPoints.Count.ToString("F1");
     }
 
     List<Vector3> ParseFile()
     {
-        float ScaleFactor = 1.0f * 39.37f;
+        float ScaleFactor = 1.0f / 39.37f;
         List<Vector3> positions = new List<Vector3>();
         string content = file.ToString();
         string[] lines = content.Split('\n');
+ //       finsih.text = lines[8];
         for (int i = 0; i < lines.Length; i++)
         {
             string[] coords = lines[i].Split(' ');
@@ -75,8 +123,30 @@ public class CheckPointParser : MonoBehaviour
         return positions;
     }
 
+    void GetCrush()
+    {
+        
+        drone.transform.position = lastPosition;
+        if ( crushCD > 0)
+        {
+            crushCD -= Time.deltaTime;
+            Crush.text = crushCD.ToString("F1");
+            drone.GetComponent<Rigidbody>().isKinematic = true;
+        } else
+        {
+            drone.GetComponent<Rigidbody>().isKinematic = false;
+            Crush.text = "";
+            crushCD = 3;
+            Landscape1.SetActive(true);
+            Landscape2.SetActive(true);
+        }
+        
+
+    }
+
     void DisplayNextCheckPoint()
     {
+        lastPosition = new Vector3(CheckPoints[currIndex].transform.position.x, CheckPoints[currIndex].transform.position.y, CheckPoints[currIndex].transform.position.z);
         currIndex += 1;
         if (currIndex == CheckPoints.Count)
         {
@@ -86,12 +156,11 @@ public class CheckPointParser : MonoBehaviour
 
     void DisplayFinishMessage()
     {
-
+        done = true;
     }
 
     void DisplayBeginMessage()
     {
-        
     }
 
     void DisplayDistance(Vector3 checkpointDir)
